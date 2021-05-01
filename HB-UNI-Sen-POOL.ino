@@ -286,12 +286,12 @@ public:
     Wire.beginTransmission(LCD_ADDRESS);
     if (Wire.endTransmission() == 0) {
       lcd.init();
+      lcd.setContrast(200);
       lcd.createChar(0, degree);
       lcd.backlight();
       lcd.setCursor(0, 0);
       lcd.print(ASKSIN_PLUS_PLUS_IDENTIFIER);
-      lcd.setCursor(3, 1);
-      lcd.setContrast(200);
+      lcd.setCursor(5, 3);
       lcd.print((char*)serial);
 
       if (backlightOnTime > 0) backlightalarm.restartTimer(backlightOnTime);
@@ -341,6 +341,7 @@ private:
     bool              ds18b20_present2;
     bool              phcalibrationMode;
     bool              first;
+    bool              calib_valid;
     int16_t           currentTemperature1;
     int16_t           currentTemperature2;
     int16_t           calib_Temperature;
@@ -359,7 +360,7 @@ private:
     uint8_t           flowrate;
     uint16_t          flowrate_cumulated;
   public:
-    MeasureChannel () : Channel(), Alarm(seconds2ticks(3)), us(0), dsWire1(DS18B20_1_PIN), dsWire2(DS18B20_2_PIN), ds18b20_present1(false), ds18b20_present2(false), phcalibrationMode(false), first(true), currentTemperature1(0), currentTemperature2(0), calib_Temperature(0), phcalibrationStep(0), ph(0), pressure(0), orp(0), calib_neutralVoltage(0), calib_acidVoltage(0), measureCount(0), ph_cumulated(0), pressure_cumulated(0), orp_cumulated(0), temperature1_cumulated(0), temperature2_cumulated(0), flowrate(0), flowrate_cumulated(0) {}
+    MeasureChannel () : Channel(), Alarm(seconds2ticks(3)), us(0), dsWire1(DS18B20_1_PIN), dsWire2(DS18B20_2_PIN), ds18b20_present1(false), ds18b20_present2(false), phcalibrationMode(false), first(true), calib_valid(false), currentTemperature1(0), currentTemperature2(0), calib_Temperature(0), phcalibrationStep(0), ph(0), pressure(0), orp(0), calib_neutralVoltage(0), calib_acidVoltage(0), measureCount(0), ph_cumulated(0), pressure_cumulated(0), orp_cumulated(0), temperature1_cumulated(0), temperature2_cumulated(0), flowrate(0), flowrate_cumulated(0) {}
     virtual ~MeasureChannel () {}
 
     int16_t readTemperature1() {
@@ -398,6 +399,15 @@ private:
       return voltage;
     }
 
+    void validatePHCalibrationValues() {
+      calib_valid =
+          (calib_neutralVoltage > 13220 && calib_neutralVoltage < 16780)
+          &&
+          (calib_acidVoltage    > 18540 && calib_acidVoltage    < 22100) ;
+
+      DPRINT("Calibration is ");DPRINTLN(calib_valid == true ? "valid":"INVALID");
+    }
+
     void restorePHCalibrationValues() {
       calib_neutralVoltage = ((uint16_t)(us.getByte(1)) << 8) + ((uint16_t)(us.getByte(2)));
       calib_acidVoltage    = ((uint16_t)(us.getByte(3)) << 8) + ((uint16_t)(us.getByte(4)));
@@ -407,6 +417,8 @@ private:
       DPRINT(F("-CAL neutralVoltage: "));DDECLN(calib_neutralVoltage);
       DPRINT(F("-CAL acidVoltage   : "));DDECLN(calib_acidVoltage);
       DPRINT(F("-CAL temperature   : "));DDECLN(calib_Temperature);
+      validatePHCalibrationValues();
+      this->changed(true);
     }
 
     void disablePHCalibrationMode() {
@@ -623,7 +635,12 @@ private:
     }
 
     uint8_t status () const { return 0; }
-    uint8_t flags ()  const { return phcalibrationMode ? 0x01 << 1 : 0x00; }
+    uint8_t flags () const {
+      uint8_t flg = 0x00;
+      if (phcalibrationMode == true)  flg = 0x01<<1;
+      else if (calib_valid == false)  flg = 0x01<<2;
+      return flg;
+    }
 };
 
 class DummyChannel : public Channel<Hal, UList1, EmptyList, DefList4, 1, UList0> {
