@@ -38,7 +38,9 @@
 #define SW_BUTTON_PIN_2      12 //PD4
 #define DS18B20_1_PIN        13 //PD5
 #define DS18B20_2_PIN        14 //PD6
-                                //PD7
+#define SENSOR_SWITCH_PIN    15 //PD7
+#define OFF LOW
+#define ON  HIGH
 
 //PC0...1 I2C
 #define SW_BUTTON_PIN_3      18 //PC2
@@ -56,6 +58,9 @@
 #define PRESSURE_PIN         A5 //PA5
 #define ORP_SIGNAL_PIN       A6 //PA6
 #define PH_SIGNAL_PIN        A7 //PA7
+#define SENSOR_SWITCH_PIN     6
+#define OFF LOW
+#define ON  HIGH
 
 #define ANALOG_SOCKET_VALUE 108
 
@@ -69,6 +74,8 @@
 #define PEERS_PER_CHANNEL        6
 #define PEERS_PER_SCCHANNEL     10
 #define PEERS_PER_SwitchChannel 10
+
+
 
 using namespace as;
 
@@ -587,7 +594,10 @@ private:
       currentTemperature1 = readTemperature1();
       currentTemperature2 = readTemperature2();
       ph = readPH();
+      digitalWrite(SENSOR_SWITCH_PIN, ON);
+      _delay_ms(100);
       orp = readORP();
+      digitalWrite(SENSOR_SWITCH_PIN, OFF);
       pressure = readPressure();
 
       //Anzeige der Daten auf dem LCD Display
@@ -633,6 +643,8 @@ private:
       pinMode(PH_SIGNAL_PIN, INPUT);
       pinMode(ORP_SIGNAL_PIN, INPUT);
       pinMode(PRESSURE_PIN, INPUT);
+      pinMode(SENSOR_SWITCH_PIN, OUTPUT);
+      digitalWrite(SENSOR_SWITCH_PIN, OFF);
       ds18b20_present1 = (Ds18b20::init(dsWire1, ds18b20_1, 1) == 1);
       ds18b20_present2 = (Ds18b20::init(dsWire2, ds18b20_2, 1) == 1);
       DPRINT(F("1. DS18B20: "));DPRINTLN( ds18b20_present1 == true ? "OK":"FAIL");
