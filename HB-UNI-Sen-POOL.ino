@@ -18,6 +18,7 @@
 #include <ContactState.h>
 #include <Switch.h>
 #include <sensors/Ds18b20.h>
+#include <PCF8583.h>
 
 #include <LiquidCrystal_I2C.h>
 #define LCD_ADDRESS        0x3f
@@ -58,6 +59,7 @@
 
 #define ANALOG_SOCKET_VALUE 108
 
+#define PCF8583_ADDRESS      0xA0
 
 
 #define REF_VOLTAGE               3300
@@ -337,6 +339,7 @@ private:
     OneWire           dsWire2;
     Ds18b20           ds18b20_1[1];
     Ds18b20           ds18b20_2[1];
+    PCF8583           pcf8583;
     bool              ds18b20_present1;
     bool              ds18b20_present2;
     bool              phcalibrationMode;
@@ -360,7 +363,7 @@ private:
     uint8_t           flowrate;
     uint16_t          flowrate_cumulated;
   public:
-    MeasureChannel () : Channel(), Alarm(seconds2ticks(3)), us(0), dsWire1(DS18B20_1_PIN), dsWire2(DS18B20_2_PIN), ds18b20_present1(false), ds18b20_present2(false), phcalibrationMode(false), first(true), calib_valid(false), currentTemperature1(0), currentTemperature2(0), calib_Temperature(0), phcalibrationStep(0), ph(0), pressure(0), orp(0), calib_neutralVoltage(0), calib_acidVoltage(0), measureCount(0), ph_cumulated(0), pressure_cumulated(0), orp_cumulated(0), temperature1_cumulated(0), temperature2_cumulated(0), flowrate(0), flowrate_cumulated(0) {}
+    MeasureChannel () : Channel(), Alarm(seconds2ticks(3)), us(0), dsWire1(DS18B20_1_PIN), dsWire2(DS18B20_2_PIN), pcf8583(PCF8583_ADDRESS), ds18b20_present1(false), ds18b20_present2(false), phcalibrationMode(false), first(true), calib_valid(false), currentTemperature1(0), currentTemperature2(0), calib_Temperature(0), phcalibrationStep(0), ph(0), pressure(0), orp(0), calib_neutralVoltage(0), calib_acidVoltage(0), measureCount(0), ph_cumulated(0), pressure_cumulated(0), orp_cumulated(0), temperature1_cumulated(0), temperature2_cumulated(0), flowrate(0), flowrate_cumulated(0) {}
     virtual ~MeasureChannel () {}
 
     int16_t readTemperature1() {
@@ -557,7 +560,20 @@ private:
     }
 
     uint8_t readFlowrate() {
-      return 0;
+      uint8_t lmin = 0;
+      /*static unsigned long millis_lastread = 0;
+      if (millis_lastread == 0) {
+        pcf8583.reset();
+        pcf8583.setMode(MODE_EVENT_COUNTER);
+        pcf8583.setCount(0);
+      } else {
+        uint32_t cnt = pcf8583.getCount();
+        uint32_t hz = (cnt * 1000) / (millis() - millis_lastread);
+        lmin = hz* 10 / this->getList1().FlowRateQFactor();
+        pcf8583.setCount(0);
+      }
+      millis_lastread = millis();*/
+      return lmin;
     }
 
     void run() {
@@ -632,6 +648,7 @@ private:
       DPRINT(F("*1.Temperature Offset : "));DDECLN(this->getList1().TemperatureOffsetIndex1());
       DPRINT(F("*2.Temperature Offset : "));DDECLN(this->getList1().TemperatureOffsetIndex2());
       DPRINT(F("*Orp         Offset   : "));DDECLN(this->getList1().OrpOffset());
+      DPRINT(F("*FlowRateQFactor      : "));DDECLN(this->getList1().FlowRateQFactor());
     }
 
     uint8_t status () const { return 0; }
