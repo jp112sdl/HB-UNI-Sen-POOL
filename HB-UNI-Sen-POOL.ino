@@ -60,7 +60,7 @@
 #define ON  HIGH
 
 
-#define ANALOG_SOCKET_VALUE 108   // correction factor for pressure measurement
+#define ANALOG_SOCKET_VALUE 150   // correction factor for pressure measurement
 
 #define PCF8583_ADDRESS      0xA0 // i2c address for the counter ic of the flow measurement
 
