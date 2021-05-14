@@ -602,7 +602,7 @@ private:
 
     uint8_t readFlowrate() {
       uint8_t lmin = 0;
-      /*static unsigned long millis_lastread = 0;
+      static unsigned long millis_lastread = 0;
       if (millis_lastread == 0) {
         pcf8583.reset();
         pcf8583.setMode(MODE_EVENT_COUNTER);
@@ -613,7 +613,7 @@ private:
         lmin = hz* 10 / this->getList1().FlowRateQFactor();
         pcf8583.setCount(0);
       }
-      millis_lastread = millis();*/
+      millis_lastread = millis();
       return lmin;
     }
 
