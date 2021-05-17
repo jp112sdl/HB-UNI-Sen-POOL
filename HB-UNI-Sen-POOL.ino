@@ -456,6 +456,7 @@ private:
 
     void disablePHCalibrationMode() {
       DPRINTLN(F("Exiting Calibration Mode"));
+      sysclock.cancel(showCalibAnalogValueAlarm);
       digitalWrite(SENSOR_SWITCH_PIN, OFF);
       phcalibrationMode = false;
       sysclock.cancel(*this);
