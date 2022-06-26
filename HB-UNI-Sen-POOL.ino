@@ -517,7 +517,7 @@ private:
         case 2:
           sysclock.cancel(showCalibAnalogValueAlarm);
           voltage = readVoltage();
-          voltage = 15791;
+          //voltage = 15791;
           if (voltage > 13220 && voltage < 16780) {
             calib_neutralVoltage = voltage;
           } else phcalibrationStep = 6;
@@ -530,7 +530,7 @@ private:
         case 4:
           sysclock.cancel(showCalibAnalogValueAlarm);
           voltage = readVoltage();
-          voltage = 20915;
+          //voltage = 20915;
           if (voltage > 18540 && voltage < 22100) {
             calib_acidVoltage = voltage;
           } else phcalibrationStep = 6;
